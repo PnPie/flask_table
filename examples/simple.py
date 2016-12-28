@@ -23,6 +23,7 @@ def main():
     items = [Item('Name1', 'Description1'),
              Item('Name2', 'Description2'),
              Item('Name3', 'Description3')]
+    print items[0].__dict__
 
     table = ItemTable(items)
 

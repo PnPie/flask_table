@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+# 将所有字符串转化为Unicode类型
 from __future__ import unicode_literals
 
 import os
@@ -21,7 +23,9 @@ from datetime import date, datetime
 
 class Item(object):
     def __init__(self, **kwargs):
+        # **kwargs: optional dictionary
         for k, v in kwargs.items():
+            # 将self对象的变量k的值设成v
             setattr(self, k, v)
 
 
