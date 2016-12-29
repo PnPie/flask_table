@@ -32,6 +32,7 @@ class Item(object):
 class Subitem(Item):
     pass
 
+
 def html_reduce(s):
     # strip: 脱去衣服:)
     return ''.join(l.strip() for l in s.split('\n'))
