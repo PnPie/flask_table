@@ -11,17 +11,20 @@ from .html import element
 
 
 class TableMeta(type):
-    """The metaclass for the Table class. We use the metaclass to sort of
-    the columns defined in the table declaration.
-
+    """
+    Metaclass: 类的类型,即它的实例是一个类
     """
 
     def __new__(meta, name, bases, attrs):
-        """Create the class as normal, but also iterate over the attributes
-        set and gather up any that are Cols, and store them, so they
-        can be iterated over later.
-
         """
+        用meta来生成一个类,此类有一个_cols属性,是一个OrderedDict,
+        按创建顺序存了所有的Col
+        :param name: 新类名称
+        :param bases: 基类
+        :param attrs: 属性和其值的字典
+        :return: 新类
+        """
+
         cls = type.__new__(meta, name, bases, attrs)
         cls._cols = OrderedDict()
         # If there are any base classes with a `_cols` attribute, add
@@ -32,11 +35,14 @@ class TableMeta(type):
             except AttributeError:
                 continue
             else:
-                cls._cols.update(parent_cols)
-        # Then add the columns from this class.
+                cls._cols.update(parent_cols) # 把一个字典里的内容更新到另一个字典里
+
+        # 对attrs中的Col值按创建顺序进行排序
         this_cls_cols = sorted(
             ((k, v) for k, v in attrs.items() if isinstance(v, Col)),
             key=lambda x: x[1]._counter_val)
+
+        # 更新字典
         cls._cols.update(OrderedDict(this_cls_cols))
         return cls
 

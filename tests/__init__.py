@@ -32,11 +32,12 @@ class Item(object):
 class Subitem(Item):
     pass
 
-
 def html_reduce(s):
+    # strip: 脱去衣服:)
     return ''.join(l.strip() for l in s.split('\n'))
 
 
+# 通过继承unittest.TestCase进行单元测试
 class TableTest(unittest.TestCase):
     def assert_in(self, x, y):
         if x not in y:
@@ -44,6 +45,12 @@ class TableTest(unittest.TestCase):
                 '{x} is not in {y}, but should be.'.format(x=x, y=y))
 
     def assert_in_html(self, x, y):
+        '''
+        x in our table y or not
+        :param x:
+        :param y: table
+        :return:
+        '''
         return self.assert_in(x, y.__html__())
 
     def assert_not_in(self, x, y):
@@ -55,15 +62,23 @@ class TableTest(unittest.TestCase):
         return self.assert_not_in(x, y.__html__())
 
     def assert_html_equivalent(self, test_tab, reference):
+        '''
+        :param test_tab: table
+        :param reference: html file
+        :return:
+        '''
         self.assertEqual(
             html_reduce(test_tab.__html__()),
             html_reduce(reference))
 
+    # 用classmethod装饰器修饰的函数,希望通过类来调用
+    # 第一个要绑定的参数为cls
     @classmethod
     def get_html(cls, d, name):
         path = os.path.join(
             os.path.abspath(os.path.dirname(__file__)),
             'html', d, name + '.html')
+        # 保证用完后关闭文件
         with io.open(path, encoding="utf8") as f:
             return f.read()
 
@@ -79,6 +94,14 @@ class TableTest(unittest.TestCase):
         self._table_cls = table_cls
 
     def assert_html_equivalent_from_file(self, d, name, items=[], **kwargs):
+        '''
+        测试html文件和给定的table(或者通过items创建出的table)是否一致
+        :param d:
+        :param name:
+        :param items:
+        :param kwargs:
+        :return:
+        '''
         table_id = kwargs.get('table_id', None)
         border = kwargs.get('border', False)
         tab = kwargs.get('tab', self.table_cls(
@@ -114,11 +137,19 @@ class FlaskTableTest(flask_testing.TestCase, TableTest):
         return test_app()
 
 
+# 通过继承TableTest(继承自unittest.TestCase)进行单元测试
 class TableIDTest(TableTest):
+    # like @Before in java, before each @Test
+    def setUp(self):
+        class MyTable(Table):
+            name = Col('Name Heading')
 
     class MyTable(Table):
         name = Col('Name Heading')
 
+        self.table_cls = MyTable
+
+    # 测试方法:以test开头的方法
     def test_one(self):
         items = [Item(name='one')]
         self.assert_html_equivalent_from_file(
