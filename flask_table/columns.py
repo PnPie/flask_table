@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 from flask import Markup, url_for
 from babel.dates import format_date, format_datetime
 
+from .html import element
+
 
 def _single_get(item, key):
     # First, try to lookup the key as if the item were a dict. If
@@ -81,12 +83,11 @@ class Col(object):
             return out
 
     def td(self, item, attr):
-        return '<td>{}</td>'.format(
-            self.td_contents(item, self.get_attr_list(attr)))
+        content = self.td_contents(item, self.get_attr_list(attr))
+        return element('td', content=content, escape_content=False)
 
     def td_contents(self, item, attr_list):
-        """Given an item and an attr, return the contents of the
-        <td>.
+        """Given an item and an attr, return the contents of the td.
 
         This method is a likely candidate to override when extending
         the Col class, which is done in LinkCol and
@@ -200,24 +201,27 @@ class LinkCol(Col):
 
     """
     def __init__(self, name, endpoint, attr=None, attr_list=None,
-                 url_kwargs=None, **kwargs):
+                 url_kwargs=None, url_kwargs_extra=None, **kwargs):
         super(LinkCol, self).__init__(
             name,
             attr=attr,
             attr_list=attr_list,
             **kwargs)
         self.endpoint = endpoint
-        if url_kwargs is None:
-            self._url_kwargs = {}
-        else:
-            self._url_kwargs = url_kwargs
+        self._url_kwargs = url_kwargs or {}
+        self._url_kwargs_extra = url_kwargs_extra or {}
 
     def url_kwargs(self, item):
-        return {k: _recursive_getattr(item, v)
-                for k, v in self._url_kwargs.items()}
+        # We give preference to the item kwargs, rather than the extra
+        # kwargs.
+        kwargs = self._url_kwargs_extra.copy()
+        item_kwargs = {k: _recursive_getattr(item, v)
+                       for k, v in self._url_kwargs.items()}
+        kwargs.update(item_kwargs)
+        return kwargs
 
     def get_attr_list(self, attr):
-        return Col.get_attr_list(self, None)
+        return super(LinkCol, self).get_attr_list(None)
 
     def text(self, item, attr_list):
         if attr_list:
@@ -229,9 +233,9 @@ class LinkCol(Col):
         return url_for(self.endpoint, **self.url_kwargs(item))
 
     def td_contents(self, item, attr_list):
-        return '<a href="{url}">{text}</a>'.format(
-            url=self.url(item),
-            text=self.td_format(self.text(item, attr_list)))
+        attrs = dict(href=self.url(item))
+        text = self.td_format(self.text(item, attr_list))
+        return element('a', attrs=attrs, content=text, escape_content=False)
 
 
 class ButtonCol(LinkCol):
@@ -244,14 +248,38 @@ class ButtonCol(LinkCol):
 
     When clicked, this will post to url_for('delete_fn', id=item.id).
 
+    Can pass button_attrs to pass extra attributes to the button
+    element.
+
     """
 
+    def __init__(self, name, endpoint, attr=None, attr_list=None,
+                 url_kwargs=None, button_attrs=None, **kwargs):
+        super(ButtonCol, self).__init__(
+            name,
+            endpoint,
+            attr=attr,
+            attr_list=attr_list,
+            url_kwargs=url_kwargs, **kwargs)
+        self.button_attrs = button_attrs or {}
+
     def td_contents(self, item, attr_list):
-        return '<form method="post" action="{url}">'\
-            '<button type="submit">{text}</button>'\
-            '</form>'.format(
-                url=self.url(item),
-                text=Markup.escape(self.text(item, attr_list)))
+        button_attrs = dict(self.button_attrs)
+        button_attrs['type'] = 'submit'
+        button = element(
+            'button',
+            attrs=button_attrs,
+            content=self.text(item, attr_list),
+        )
+        return element(
+            'form',
+            attrs=dict(
+                method='post',
+                action=self.url(item),
+            ),
+            content=button,
+            escape_content=False,
+        )
 
 
 class NestedTableCol(Col):

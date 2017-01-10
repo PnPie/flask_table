@@ -176,8 +176,8 @@ to be looked up on the item. These keys obey the same rules as
 elsewhere, so can be things like `'category.name'` or `('category',
 'name')`.
 
-[[Possible future work: make it so some constants can be passed as
-part of the `url_kwargs`]]
+The kwarg `url_kwargs_extra` allows passing of contants to the
+url. This can be useful for adding constant GET params to a url.
 
 The text for the link is acquired in *almost* the same way as with
 other columns. However, other columns can be given no `attr` or
@@ -198,11 +198,14 @@ More about `ButtonCol`
 Has all the same options as `LinkCol` but instead adds a form and a
 button that gets posted to the url.
 
+You can pass a dict of attributes to add to the button element with
+the `button_attrs` kwarg.
+
 [[Possible future work: make it so you can specify hidden fields to be
 added into the form.]]
 
 [[Possible future work: make it so you can specify attributes for the
-HTML form or button elements.]]
+HTML form.]]
 
 More about `NestedTableCol`
 ---------------------------
@@ -292,15 +295,8 @@ Manipulating `<tr>`s
 (Look in examples/rows.py for a more concrete example)
 
 Suppose you want to change something about the tr element for some or
-all items. You can do this by overriding your table's `tr_format`
-method. By default, this method returns:
-
-```python
-'<tr>{}</tr>'
-```
-
-which betrays the fact that it has `.format()` called on it, to put in
-the tds. If you override the method, keep that in mind.
+all items. You can do this by overriding your table's `get_tr_attrs`
+method. By default, this method returns an empty dict.
 
 So, we might want to use something like:
 
@@ -309,11 +305,11 @@ class ItemTable(Table):
     name = Col('Name')
     description = Col('Description')
 
-    def tr_format(self, item):
+    def get_tr_attrs(self, item):
         if item.important():
-            return '<tr class="important">{}</tr>'
+            return {'class': 'important'}
         else:
-            return '<tr>{}</tr>'
+            return {}
 ```
 
 which would give all trs for items that returned a true value for the

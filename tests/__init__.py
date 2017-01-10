@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import os
+# Set all of our environment variables before we import other things
+# that may read these at import time. We also use noqa to stop pep8
+# from worrying about imports not being at the top of the file.
+for name in ['LANGUAGE', 'LC_ALL', 'LC_CTYPE', 'LC_MESSAGES', 'LC_TIME']:  # noqa
+    os.environ[name] = ''
+os.environ['LANGUAGE'] = 'en_GB.UTF-8'  # noqa
+
 import io
 import unittest
 from flask import Flask, url_for
@@ -8,10 +16,6 @@ from flask_table import (Table, Col, LinkCol, ButtonCol, OptCol, BoolCol,
                          DateCol, DatetimeCol, NestedTableCol, create_table)
 import flask.ext.testing as flask_testing
 from datetime import date, datetime
-
-for name in ['LANGUAGE', 'LC_ALL', 'LC_CTYPE', 'LC_MESSAGES']:
-    os.environ[name] = ''
-os.environ['LANGUAGE'] = 'en_GB.UTF-8'
 
 
 class Item(object):
@@ -228,13 +232,12 @@ class OverrideTrTest(TableTest):
         class MyTable(Table):
             number = Col('Number')
 
-            def tr_format(self, item):
+            def get_tr_attrs(self, item):
                 if item['number'] % 3 == 1:
-                    return '<tr class="threes-plus-one">{}</tr>'
+                    return {'class': 'threes-plus-one'}
                 elif item['number'] % 3 == 2:
-                    return '<tr class="threes-plus-two">{}</tr>'
-                else:
-                    return '<tr>{}</tr>'
+                    return {'class': 'threes-plus-two'}
+                return {}
 
         self.table_cls = MyTable
 
@@ -451,6 +454,20 @@ class NoItemsDynamicTest(TableTest):
             'no_items_test', 'test_zero', tab=tab)
 
 
+class NoItemsAllowEmptyTest(TableTest):
+    def setUp(self):
+        class MyTable(Table):
+            name = Col('Name Heading')
+            allow_empty = True
+
+        self.table_cls = MyTable
+
+    def test_zero(self):
+        items = []
+        self.assert_html_equivalent_from_file(
+            'no_items_allow_empty', 'test_zero', items)
+
+
 class ClassTestAtPopulate(TableTest):
     def setUp(self):
         class MyTable(Table):
@@ -491,6 +508,47 @@ class LinkTest(FlaskTableTest):
         items = [Item(name='one', id=1)]
         self.assert_html_equivalent_from_file(
             'link_test', 'test_one', items)
+
+
+class LinkExtraKwargsTest(FlaskTableTest):
+    def setUp(self):
+        class LinkTable(Table):
+            name = Col('Name')
+            view = LinkCol(
+                'View',
+                'view',
+                url_kwargs=dict(id_='id'),
+                url_kwargs_extra=dict(extra='extra'))
+
+        self.table_cls = LinkTable
+
+    def test_one(self):
+        items = [Item(name='one', id=1)]
+        self.assert_html_equivalent_from_file(
+            'link_test', 'test_one_extra_kwargs', items)
+
+
+class LinkExtraKwargsRepeatTest(FlaskTableTest):
+    """Check that if both `url_kwargs` and `url_kwargs_extra` are given
+    and share a key that we default to the value from the item, rather
+    than the static value from `url_kwargs_extra`.
+
+    """
+    def setUp(self):
+        class LinkTable(Table):
+            name = Col('Name')
+            view = LinkCol(
+                'View',
+                'view',
+                url_kwargs=dict(id_='id'),
+                url_kwargs_extra=dict(id_='id-from-extra', extra='extra'))
+
+        self.table_cls = LinkTable
+
+    def test_one(self):
+        items = [Item(name='one', id=1)]
+        self.assert_html_equivalent_from_file(
+            'link_test', 'test_one_extra_kwargs', items)
 
 
 class LinkDictTest(LinkTest):
@@ -564,6 +622,23 @@ class ButtonTest(FlaskTableTest):
         items = [Item(name='one', id=1)]
         self.assert_html_equivalent_from_file(
             'button_test', 'test_one', items)
+
+
+class ButtonAttrsTest(FlaskTableTest):
+    def setUp(self):
+        class ButtonTable(Table):
+            name = Col('Name')
+            view = ButtonCol(
+                'Delete',
+                'delete',
+                url_kwargs=dict(id_='id'),
+                button_attrs={'class': 'myclass'})
+        self.table_cls = ButtonTable
+
+    def test_one(self):
+        items = [Item(name='one', id=1)]
+        self.assert_html_equivalent_from_file(
+            'button_attrs_test', 'test_one', items)
 
 
 class BoolTest(TableTest):
