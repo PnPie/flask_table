@@ -35,7 +35,7 @@ class TableMeta(type):
             except AttributeError:
                 continue
             else:
-                cls._cols.update(parent_cols) # 把一个字典里的内容更新到另一个字典里
+                cls._cols.update(parent_cols)  # 把一个字典里的内容更新到另一个字典里
 
         # 对attrs中的Col值按创建顺序进行排序
         this_cls_cols = sorted(
