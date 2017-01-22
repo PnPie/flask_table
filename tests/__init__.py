@@ -144,7 +144,6 @@ class TableIDTest(TableTest):
     class MyTable(Table):
         name = Col('Name Heading')
 
-
     # 测试方法:以test开头的方法
     def test_one(self):
         items = [Item(name='one')]
