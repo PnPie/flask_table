@@ -1,14 +1,22 @@
+import os
+
 from setuptools import setup
 
 install_requires = [
     'Flask',
-    'Babel'
+    'Flask-Babel',
 ]
+
+if os.path.exists('README'):
+    with open('README') as f:
+        readme = f.read()
+else:
+    readme = None
 
 setup(
     name='Flask-Table',
     packages=['flask_table'],
-    version='0.2.13',
+    version='0.3.2',
     author='Andrew Plummer',
     author_email='plummer574@gmail.com',
     url='https://github.com/plumdog/flask_table',
@@ -16,6 +24,7 @@ setup(
     install_requires=install_requires,
     test_suite='tests',
     tests_require=['flask-testing'],
+    long_description=readme,
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python',
