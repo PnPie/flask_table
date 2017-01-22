@@ -140,15 +140,10 @@ class FlaskTableTest(flask_testing.TestCase, TableTest):
 
 # 通过继承TableTest(继承自unittest.TestCase)进行单元测试
 class TableIDTest(TableTest):
-    # like @Before in java, before each @Test
-    def setUp(self):
-        class MyTable(Table):
-            name = Col('Name Heading')
 
     class MyTable(Table):
         name = Col('Name Heading')
 
-        self.table_cls = MyTable
 
     # 测试方法:以test开头的方法
     def test_one(self):
