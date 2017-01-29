@@ -1,6 +1,5 @@
-from flask_table import Table, DatetimeCol
+from flask_table import Table, Col
 
-from datetime import datetime
 
 """Lets suppose that we have a class that we get an iterable of from
 somewhere, such as a database. We can declare a table that pulls out
@@ -10,19 +9,20 @@ the relevant entries, escapes them and displays them.
 
 
 class Item(object):
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
 
 
 class ItemTable(Table):
-    datetime = DatetimeCol('Time')
+    name = Col('Name')
+    description = Col('Description')
 
 
 def main():
-    items = [
-        Item(datetime=datetime(2014, 1, 1, 10, 20, 30)),
-        Item(datetime=None)]
+    items = [Item('Name1', 'Description1'),
+             Item('Name2', 'Description2'),
+             Item('Name3', 'Description3')]
 
     table = ItemTable(items)
 
@@ -56,7 +56,6 @@ def main():
 
     Except it doesn't bother to prettify the output.
     """
-
 
 if __name__ == '__main__':
     main()
